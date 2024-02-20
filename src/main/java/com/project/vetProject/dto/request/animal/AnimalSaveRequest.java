@@ -24,5 +24,5 @@ public class AnimalSaveRequest {
     private String color;
     @NotNull(message = "Hayvan doğum tarihi boş olamaz")
     private LocalDate birthday;
-    private Customer customer;
+    private Integer  customerId;
 }

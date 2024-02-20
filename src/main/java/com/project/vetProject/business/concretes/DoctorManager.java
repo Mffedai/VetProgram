@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 public class DoctorManager implements IDoctorService {
     public final DoctorRepo doctorRepo;
@@ -47,5 +50,10 @@ public class DoctorManager implements IDoctorService {
         Doctor doctor = this.get(id);
         this.doctorRepo.delete(doctor);
         return true;
+    }
+
+    @Override
+    public List<Doctor> findByIdAndAvailableDateDate(int id, LocalDate localDate) {
+        return this.doctorRepo.findByIdAndAvailableDateDate(id, localDate);
     }
 }

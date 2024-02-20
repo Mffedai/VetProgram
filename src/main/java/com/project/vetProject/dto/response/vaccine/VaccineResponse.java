@@ -1,9 +1,6 @@
 package com.project.vetProject.dto.response.vaccine;
 
 import com.project.vetProject.entity.Animal;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

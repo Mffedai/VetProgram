@@ -1,9 +1,12 @@
 package com.project.vetProject.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "doctors")
@@ -26,4 +29,12 @@ public class Doctor {
     private String address;
     @Column(name = "doctor_city")
     private String city;
+
+    @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Appointment> appointments;
+
+    @OneToMany(mappedBy = "doctor", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @JsonIgnore
+    private List<AvailableDate> availableDate;
 }

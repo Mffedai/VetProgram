@@ -44,7 +44,11 @@ public class Animal {
     @JoinColumn(name = "animal_customer_id", referencedColumnName = "customer_id")
     private Customer customer;
 
-    @OneToMany(mappedBy = "animal")
+    @OneToMany(mappedBy = "animal", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Appointment> appointments;
+
+    @OneToMany(mappedBy = "animal", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JsonIgnore
     private List<Vaccine> vaccine;
 }

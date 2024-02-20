@@ -12,6 +12,7 @@ public interface IVaccineService {
     Page<Vaccine> cursor(int page, int pageSize);
     List<Vaccine> findByAnimalId(int id);
     List<Vaccine> findByDate(LocalDate entryDate, LocalDate exitDate);
+    List<Vaccine> findByCodeAndName(String code, String name);
     Vaccine update(Vaccine vaccine);
     boolean delete(int id);
 }

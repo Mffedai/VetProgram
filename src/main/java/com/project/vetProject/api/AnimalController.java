@@ -24,15 +24,20 @@ import java.util.List;
 public class AnimalController {
     private final IAnimalService animalService;
     private final IModelMapperService modelMapperService;
+    private final ICustomerService customerService;
 
-    public AnimalController(IAnimalService animalService, IModelMapperService modelMapperService, ICustomerService customerService) {
+    public AnimalController(IAnimalService animalService, IModelMapperService modelMapperService, ICustomerService customerService, ICustomerService customerService1) {
         this.animalService = animalService;
         this.modelMapperService = modelMapperService;
+        this.customerService = customerService1;
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AnimalResponse> save(@Valid @RequestBody AnimalSaveRequest animalSaveRequest){
+        Customer customer = this.customerService.get(animalSaveRequest.getCustomerId());
+        animalSaveRequest.setCustomerId(null);
         Animal saveAnimal = this.modelMapperService.forRequest().map(animalSaveRequest, Animal.class);
+        saveAnimal.setCustomer(customer);
 
         this.animalService.save(saveAnimal);
         return ResultHelper.created(this.modelMapperService.forResponse().map(saveAnimal, AnimalResponse.class));

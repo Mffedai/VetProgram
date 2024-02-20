@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -33,6 +34,12 @@ public class VaccineController {
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<VaccineResponse> save(@Valid @RequestBody VaccineSaveRequest vaccineSaveRequest){
+        List<Vaccine> existVaccines = vaccineService.findByCodeAndName(vaccineSaveRequest.getCode(), vaccineSaveRequest.getName());
+
+        if (!existVaccines.isEmpty() && existVaccines.get(0).getProtectionFnshDate().isAfter(LocalDate.now())){
+            return ResultHelper.error("Aynı koda sahip aşının bitiş tarihi bitmemiş! ");
+        }
+
         Vaccine saveVaccine = this.modelMapperService.forRequest().map(vaccineSaveRequest, Vaccine.class);
         this.vaccineService.save(saveVaccine);
         return ResultHelper.created(this.modelMapperService.forResponse().map(saveVaccine, VaccineResponse.class));

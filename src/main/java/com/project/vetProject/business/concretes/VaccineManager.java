@@ -48,6 +48,11 @@ public class VaccineManager implements IVaccineService {
     }
 
     @Override
+    public List<Vaccine> findByCodeAndName(String code, String name) {
+        return this.vaccineRepo.findByCodeAndName(code,name);
+    }
+
+    @Override
     public Vaccine update(Vaccine vaccine) {
         this.get(vaccine.getId());
         return this.save(vaccine);
