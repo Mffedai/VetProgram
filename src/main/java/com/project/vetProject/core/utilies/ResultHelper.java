@@ -21,6 +21,12 @@ public class ResultHelper {
     public static <T> ResultData<T> error(String message){
         return new ResultData<>(false, message, "400", null);
     }
+    public static <T>ResultData<T> NotFoundByName(){
+        return new ResultData<>(true, Msg.NOT_FOUND_BY_NAME, "200", null);
+    }
+    public static <T>ResultData<T> FoundByName(){
+        return new ResultData<>(false, Msg.FOUND_BY_NAME, "200", null);
+    }
     public static Result NotFoundError(String msg){
         return new Result(false, msg, "404");
     }

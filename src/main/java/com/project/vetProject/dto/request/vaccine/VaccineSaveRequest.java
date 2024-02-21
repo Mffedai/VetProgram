@@ -20,5 +20,5 @@ public class VaccineSaveRequest {
     private LocalDate protectionStrtDate;
     @NotNull(message = "Aşı bitiş tarihi boş olamaz")
     private LocalDate protectionFnshDate;
-    private Animal animal;
+    private Integer animalId;
 }

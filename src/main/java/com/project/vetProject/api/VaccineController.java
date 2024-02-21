@@ -1,5 +1,6 @@
 package com.project.vetProject.api;
 
+import com.project.vetProject.business.abstracts.IAnimalService;
 import com.project.vetProject.business.abstracts.IVaccineService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
 import com.project.vetProject.core.result.Result;
@@ -26,10 +27,12 @@ import java.util.List;
 public class VaccineController {
     private final IVaccineService vaccineService;
     private final IModelMapperService modelMapperService;
+    private final IAnimalService animalService;
 
-    public VaccineController(IVaccineService vaccineService, IModelMapperService modelMapperService) {
+    public VaccineController(IVaccineService vaccineService, IModelMapperService modelMapperService, IAnimalService animalService) {
         this.vaccineService = vaccineService;
         this.modelMapperService = modelMapperService;
+        this.animalService = animalService;
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
@@ -39,8 +42,11 @@ public class VaccineController {
         if (!existVaccines.isEmpty() && existVaccines.get(0).getProtectionFnshDate().isAfter(LocalDate.now())){
             return ResultHelper.error("Aynı koda sahip aşının bitiş tarihi bitmemiş! ");
         }
+        Animal animal = this.animalService.get(vaccineSaveRequest.getAnimalId());
+        vaccineSaveRequest.setAnimalId(null);
 
         Vaccine saveVaccine = this.modelMapperService.forRequest().map(vaccineSaveRequest, Vaccine.class);
+        saveVaccine.setAnimal(animal);
         this.vaccineService.save(saveVaccine);
         return ResultHelper.created(this.modelMapperService.forResponse().map(saveVaccine, VaccineResponse.class));
     }

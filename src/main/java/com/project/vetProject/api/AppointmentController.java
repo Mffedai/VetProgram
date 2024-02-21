@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -29,53 +30,17 @@ import java.util.List;
 public class AppointmentController {
     private final IAppointmentService appointmentService;
     private final IModelMapperService modelMapperService;
-    private final IDoctorService doctorService;
-    private final IAnimalService animalService;
 
-    public AppointmentController(IAppointmentService appointmentService, IModelMapperService modelMapperService, IDoctorService doctorService, IAnimalService animalService) {
+
+    public AppointmentController(IAppointmentService appointmentService, IModelMapperService modelMapperService) {
         this.appointmentService = appointmentService;
         this.modelMapperService = modelMapperService;
-        this.doctorService = doctorService;
-        this.animalService = animalService;
+
     }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AppointmentResponse> save(@Valid @RequestBody AppointmentSaveRequest appointmentSaveRequest){
-
-        //LocalDateTime dakika ve saniyeleri 0'layıp sadece saat bilgisine göre setleniyor.
-        LocalDateTime dateTime = appointmentSaveRequest.getDateTime();
-        dateTime = dateTime.withMinute(0).withSecond(0).withNano(0);
-
-        //AnimalId ve DoctorId ye göre nesneler üretiliyor
-        Animal animal = this.animalService.get(appointmentSaveRequest.getAnimalId());
-        Doctor doctor = this.doctorService.get(appointmentSaveRequest.getDoctorId());
-
-        //Doktorun müsait günlerini liste içerisine atıyor
-        List<Doctor> doctorList =  this.doctorService.findByIdAndAvailableDateDate(appointmentSaveRequest.getDoctorId(), LocalDate.from(dateTime));
-        //Oluşturulan randevular içerisinde çakışan randevuları liste içerisine atıyor.
-        List<Appointment> appointmentByDate = this.appointmentService.findByDateTime(dateTime);
-
-        //DoctorId ve AnimalId ler aynı olduğu için update işlemi yapmasın diye null değeri verilir.
-        appointmentSaveRequest.setAnimalId(null);
-        appointmentSaveRequest.setDateTime(null);
-        appointmentSaveRequest.setDoctorId(null);
-
-        //restApi ile setleme işlemi yapılır.
-        Appointment saveAppointment = this.modelMapperService.forRequest().map(appointmentSaveRequest, Appointment.class);
-        saveAppointment.setAnimal(animal);
-        saveAppointment.setDoctor(doctor);
-        saveAppointment.setDateTime(dateTime);
-
-        //Liste içerisine aldığımız değerlerden çakışan varsa bu hata mesajı fırlatır yoksa veritabanına kaydetme işlemi yapar.
-        if (doctorList.isEmpty()){
-            //return ResultHelper.error("Doktor bu tarihte müsait değildir.");
-            throw new RuntimeException("Doktor bu tarihte müsait değildir.");
-        } else if (!appointmentByDate.isEmpty()) {
-            throw new RuntimeException("Doktorun bu saatte randevusu bulunmaktadır.");
-        } else {
-            this.appointmentService.save(saveAppointment);
-        }
-        return ResultHelper.created(this.modelMapperService.forResponse().map(saveAppointment, AppointmentResponse.class));
+        return this.appointmentService.save(appointmentSaveRequest);
     }
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
@@ -100,13 +65,26 @@ public class AppointmentController {
         this.appointmentService.delete(id);
         return ResultHelper.ok();
     }
-    @GetMapping("/filter/{doctorId}-{findByDate}")
-    public List<Appointment> getDoctorNameAndDate(
+    @GetMapping("/filterByDrDate/{doctorId}-{findByDate}")
+    public List<Appointment> getDoctorIdAndDate(
             @PathVariable("doctorId") int id,
-            @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime entryDate,
-            @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime exitDate
+            @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate entryDate,
+            @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate exitDate
     ){
-        return this.appointmentService.findByDoctorIdAndDateTimeBetween(id,entryDate,exitDate);
+        LocalDateTime convertedEntryDate = entryDate.atStartOfDay();
+        LocalDateTime convertedExitDate = exitDate.atStartOfDay().plusDays(1);
+        return this.appointmentService.findByDoctorIdAndDateTimeBetween(id,convertedEntryDate,convertedExitDate);
+    }
+
+    @GetMapping("/filterByAnmlDate/{animalId}-{findByDate}")
+    public List<Appointment> getAnimalIdAndDate(
+            @PathVariable("animalId") int id,
+            @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate entryDate,
+            @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate exitDate
+    ){
+        LocalDateTime convertedEntryDate = entryDate.atStartOfDay();
+        LocalDateTime convertedExitDate = exitDate.atStartOfDay().plusDays(1);
+        return this.appointmentService.findByAnimalIdAndDateTimeBetween(id, convertedEntryDate, convertedExitDate);
     }
 
 }

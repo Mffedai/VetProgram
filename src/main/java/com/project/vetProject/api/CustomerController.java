@@ -31,8 +31,7 @@ public class CustomerController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<CustomerResponse> save(@Valid @RequestBody CustomerSaveRequest customerSaveRequest){
         Customer saveCustomer = this.modelMapperService.forRequest().map(customerSaveRequest, Customer.class);
-        this.customerService.save(saveCustomer);
-        return ResultHelper.created(this.modelMapperService.forResponse().map(saveCustomer, CustomerResponse.class));
+        return this.customerService.save(saveCustomer);
     }
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
@@ -60,9 +59,6 @@ public class CustomerController {
     @GetMapping("/{name}")
     @ResponseStatus(HttpStatus.OK)
     public ResultData<List<Customer>> get(@PathVariable("name") String name){
-
-        List<Customer> customerList = this.customerService.findByName(name);
-        return ResultHelper.success(customerList);
+        return this.customerService.findByName(name);
     }
-
 }

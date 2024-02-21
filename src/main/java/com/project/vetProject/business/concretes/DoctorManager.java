@@ -3,8 +3,12 @@ package com.project.vetProject.business.concretes;
 import com.project.vetProject.business.abstracts.IDoctorService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
 import com.project.vetProject.core.exception.NotFoundException;
+import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
+import com.project.vetProject.core.utilies.ResultHelper;
 import com.project.vetProject.dao.DoctorRepo;
+import com.project.vetProject.dto.request.doctor.DoctorSaveRequest;
+import com.project.vetProject.dto.response.doctor.DoctorResponse;
 import com.project.vetProject.entity.Doctor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,15 +21,26 @@ import java.util.List;
 @Service
 public class DoctorManager implements IDoctorService {
     public final DoctorRepo doctorRepo;
+    public final IModelMapperService modelMapperService;
 
-    public DoctorManager(DoctorRepo doctorRepo) {
+    public DoctorManager(DoctorRepo doctorRepo, IModelMapperService modelMapperService) {
         this.doctorRepo = doctorRepo;
+        this.modelMapperService = modelMapperService;
     }
 
 
     @Override
-    public Doctor save(Doctor doctor) {
-        return this.doctorRepo.save(doctor);
+    public ResultData<DoctorResponse> save(DoctorSaveRequest doctorSaveRequest) {
+        List<Doctor> doctorList = this.findByNameAndMailAndPhone(
+                doctorSaveRequest.getName(),
+                doctorSaveRequest.getMail(),
+                doctorSaveRequest.getPhone()
+        );
+        if (!doctorList.isEmpty()){
+            return ResultHelper.FoundByName();
+        }
+        Doctor saveDoctor = this.modelMapperService.forRequest().map(doctorSaveRequest, Doctor.class);
+        return ResultHelper.created(this.modelMapperService.forResponse().map(this.doctorRepo.save(saveDoctor), DoctorResponse.class));
     }
 
     @Override
@@ -55,5 +70,10 @@ public class DoctorManager implements IDoctorService {
     @Override
     public List<Doctor> findByIdAndAvailableDateDate(int id, LocalDate localDate) {
         return this.doctorRepo.findByIdAndAvailableDateDate(id, localDate);
+    }
+
+    @Override
+    public List<Doctor> findByNameAndMailAndPhone(String name, String mail, String phone) {
+        return this.doctorRepo.findByNameAndMailAndPhone(name, mail, phone);
     }
 }
