@@ -1,16 +1,13 @@
 package com.project.vetProject.core.result;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class Result {
     private boolean status;
     private String message;
     private String code;
 
-    public Result(boolean status, String message, String code) {
-        this.status = status;
-        this.message = message;
-        this.code = code;
-    }
 }

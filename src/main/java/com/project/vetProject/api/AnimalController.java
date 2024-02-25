@@ -13,6 +13,7 @@ import com.project.vetProject.dto.response.animal.AnimalResponse;
 import com.project.vetProject.entity.Animal;
 import com.project.vetProject.entity.Customer;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -21,15 +22,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/animals")
+@RequiredArgsConstructor
 public class AnimalController {
     private final IAnimalService animalService;
     private final IModelMapperService modelMapperService;
 
-
-    public AnimalController(IAnimalService animalService, IModelMapperService modelMapperService) {
-        this.animalService = animalService;
-        this.modelMapperService = modelMapperService;
-    }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AnimalResponse> save(@Valid @RequestBody AnimalSaveRequest animalSaveRequest){

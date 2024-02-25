@@ -28,7 +28,7 @@ public class DoctorController {
         this.modelMapperService = modelMapperService;
     }
     @PostMapping()
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.CREATED)
     public ResultData<DoctorResponse> save(@Valid @RequestBody DoctorSaveRequest doctorSaveRequest){
         return this.doctorService.save(doctorSaveRequest);
     }

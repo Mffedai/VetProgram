@@ -75,7 +75,6 @@ public class AppointmentManager implements IAppointmentService {
         //Liste içerisine aldığımız değerlerden çakışan varsa bu hata mesajı fırlatır yoksa veritabanına kaydetme işlemi yapar.
         if (doctorList.isEmpty()){
             return ResultHelper.error("Doktor bu tarihte müsait değildir.");
-
         } else if (!appointmentByDate.isEmpty()) {
             return ResultHelper.error("Doktorun bu saatte randevusu bulunmaktadır.");
 

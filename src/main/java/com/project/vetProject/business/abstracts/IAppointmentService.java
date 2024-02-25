@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface IAppointmentService {
+public interface IAppointmentService{
     ResultData<AppointmentResponse> save(AppointmentSaveRequest appointmentSaveRequest);
     Appointment get(int id);
     Page<Appointment> cursor(int page, int pageSize);
