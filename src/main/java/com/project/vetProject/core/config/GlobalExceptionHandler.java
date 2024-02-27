@@ -1,5 +1,6 @@
 package com.project.vetProject.core.config;
 
+import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.result.Result;
 import com.project.vetProject.core.result.ResultData;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +31,9 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.toList());
         return new ResponseEntity<>(ResultHelper.validateError(validationErrorList), HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(DataAlreadyExistException.class)
+    public ResponseEntity<Result> handleDataAlreadyExistException(DataAlreadyExistException e){
+        return new ResponseEntity<>(ResultHelper.error(e.getMessage()), HttpStatus.CONFLICT);
     }
 }

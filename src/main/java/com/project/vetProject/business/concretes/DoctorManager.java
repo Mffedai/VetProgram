@@ -2,6 +2,7 @@ package com.project.vetProject.business.concretes;
 
 import com.project.vetProject.business.abstracts.IDoctorService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
+import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
 import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
@@ -37,7 +38,7 @@ public class DoctorManager implements IDoctorService {
                 doctorSaveRequest.getPhone()
         );
         if (!doctorList.isEmpty()){
-            return ResultHelper.FoundByName();
+            throw new DataAlreadyExistException(Msg.getEntityForMsg(Doctor.class));
         }
         Doctor saveDoctor = this.modelMapperService.forRequest().map(doctorSaveRequest, Doctor.class);
         return ResultHelper.created(this.modelMapperService.forResponse().map(this.doctorRepo.save(saveDoctor), DoctorResponse.class));

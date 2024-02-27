@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface IAppointmentService{
     ResultData<AppointmentResponse> save(AppointmentSaveRequest appointmentSaveRequest);
@@ -18,4 +19,5 @@ public interface IAppointmentService{
     List<Appointment> findByDateTime(LocalDateTime localDateTime);
     List<Appointment> findByDoctorIdAndDateTimeBetween(int id, LocalDateTime entryDate, LocalDateTime exitDate);
     List<Appointment> findByAnimalIdAndDateTimeBetween(int id, LocalDateTime entryDate, LocalDateTime exitDate);
+    Optional<Appointment> findByValueForValid(LocalDateTime dateTime, Integer doctorId, Integer animalId);
 }

@@ -2,6 +2,7 @@ package com.project.vetProject.business.concretes;
 
 import com.project.vetProject.business.abstracts.ICustomerService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
+import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
 import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
@@ -32,7 +33,7 @@ public class CustomerManager implements ICustomerService {
     public ResultData<CustomerResponse> save(Customer customer) {
         List<Customer> getByNamePhoneMail = this.findByNameAndMailAndPhone(customer.getName(), customer.getMail(), customer.getPhone());
         if (!getByNamePhoneMail.isEmpty()){
-            return ResultHelper.FoundByName();
+            throw new DataAlreadyExistException(Msg.getEntityForMsg(Customer.class));
         }
         return ResultHelper.created(this.modelMapperService.forResponse().map(this.customerRepo.save(customer), CustomerResponse.class));
     }

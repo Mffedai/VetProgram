@@ -3,6 +3,7 @@ package com.project.vetProject.business.concretes;
 import com.project.vetProject.business.abstracts.IAnimalService;
 import com.project.vetProject.business.abstracts.ICustomerService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
+import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
 import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
@@ -45,7 +46,7 @@ public class AnimalManager implements IAnimalService {
                 animalSaveRequest.getGender()
         );
         if (!animalList.isEmpty()){
-            return ResultHelper.FoundByName();
+            throw new DataAlreadyExistException(Msg.getEntityForMsg(Animal.class));
         }
         return ResultHelper.created(this.modelMapperService.forResponse().map(this.animalRepo.save(saveAnimal), AnimalResponse.class));
     }

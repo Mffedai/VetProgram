@@ -4,6 +4,7 @@ import com.project.vetProject.business.abstracts.IAnimalService;
 import com.project.vetProject.business.abstracts.IAppointmentService;
 import com.project.vetProject.business.abstracts.IDoctorService;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
+import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
 import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AppointmentManager implements IAppointmentService {
@@ -50,6 +52,14 @@ public class AppointmentManager implements IAppointmentService {
         if (dateTime.getMinute() != 0){
             return ResultHelper.error("Lütfen dakika bilgisini '00' giriniz.");
         }
+        Optional<Appointment> appointmentOptional = this.findByValueForValid(
+                appointmentSaveRequest.getDateTime(),
+                appointmentSaveRequest.getDoctorId(),
+                appointmentSaveRequest.getAnimalId()
+        );
+        if (appointmentOptional.isPresent()){
+            throw new DataAlreadyExistException(Msg.getEntityForMsg(Appointment.class));
+        }
 
         //AnimalId ve DoctorId ye göre nesneler üretiliyor
         Animal animal = this.animalService.get(appointmentSaveRequest.getAnimalId());
@@ -77,7 +87,6 @@ public class AppointmentManager implements IAppointmentService {
             return ResultHelper.error("Doktor bu tarihte müsait değildir.");
         } else if (!appointmentByDate.isEmpty()) {
             return ResultHelper.error("Doktorun bu saatte randevusu bulunmaktadır.");
-
         } else {
             Appointment appointment = this.appointmentRepo.save(saveAppointment);
             return ResultHelper.created(this.modelMapperService.forResponse().map(appointment, AppointmentResponse.class));
@@ -121,5 +130,10 @@ public class AppointmentManager implements IAppointmentService {
     @Override
     public List<Appointment> findByAnimalIdAndDateTimeBetween(int id, LocalDateTime entryDate, LocalDateTime exitDate) {
         return this.appointmentRepo.findByAnimalIdAndDateTimeBetween(id, entryDate, exitDate);
+    }
+
+    @Override
+    public Optional<Appointment> findByValueForValid(LocalDateTime dateTime, Integer doctorId, Integer animalId) {
+        return this.appointmentRepo.findByDateTimeAndDoctorIdAndAnimalId(dateTime, doctorId, animalId);
     }
 }
