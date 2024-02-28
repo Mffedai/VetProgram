@@ -2,6 +2,7 @@ package com.project.vetProject.api;
 
 import com.project.vetProject.business.abstracts.IAnimalService;
 import com.project.vetProject.business.abstracts.ICustomerService;
+import com.project.vetProject.core.config.ConvertEntityToResponse;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
 import com.project.vetProject.core.result.Result;
 import com.project.vetProject.core.result.ResultData;
@@ -19,13 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/animals")
 @RequiredArgsConstructor
 public class AnimalController {
     private final IAnimalService animalService;
-    private final IModelMapperService modelMapperService;
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,17 +38,12 @@ public class AnimalController {
     public ResultData<CursorResponse<AnimalResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize){
-        Page<Animal> animalPage = this.animalService.cursor(page, pageSize);
-        Page<AnimalResponse> animalResponsePage = animalPage.map(animal -> this.modelMapperService.forResponse().map(animal, AnimalResponse.class));
-        return ResultHelper.cursor(animalResponsePage);
+        return this.animalService.cursor(page, pageSize);
     }
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<AnimalResponse> update(@Valid @RequestBody AnimalUpdateRequest animalUpdateRequest){
-        this.animalService.get(animalUpdateRequest.getId());
-        Animal updateAnimal = this.modelMapperService.forRequest().map(animalUpdateRequest, Animal.class);
-        this.animalService.update(updateAnimal);
-        return ResultHelper.success(this.modelMapperService.forResponse().map(updateAnimal, AnimalResponse.class));
+        return this.animalService.update(animalUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -57,17 +53,12 @@ public class AnimalController {
     }
     @GetMapping("/{name}")
     @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<Animal>> get(@PathVariable("name") String name){
-        List<Animal> animalList = this.animalService.findByName(name);
-        if (animalList.isEmpty()){
-            return ResultHelper.NotFoundByName();
-        }
-        return ResultHelper.success(animalList);
+    public ResultData<List<AnimalResponse>> get(@PathVariable("name") String name){
+        return this.animalService.findByName(name);
     }
     @GetMapping("/customer/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<Animal>> getAnimalsByCustomerId(@PathVariable("id") int customerId){
-        List<Animal> animalList = this.animalService.findByCustomerId(customerId);
-        return ResultHelper.success(animalList);
+    public ResultData<List<AnimalResponse>> getAnimalsByCustomerId(@PathVariable("id") int customerId){
+        return this.animalService.findByCustomerId(customerId);
     }
 }

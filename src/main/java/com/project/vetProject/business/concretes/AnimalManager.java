@@ -6,13 +6,17 @@ import com.project.vetProject.core.config.modelMapper.IModelMapperService;
 import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
 import com.project.vetProject.core.result.ResultData;
+import com.project.vetProject.core.config.ConvertEntityToResponse;
 import com.project.vetProject.core.utilies.Msg;
 import com.project.vetProject.core.utilies.ResultHelper;
 import com.project.vetProject.dao.AnimalRepo;
+import com.project.vetProject.dto.CursorResponse;
 import com.project.vetProject.dto.request.animal.AnimalSaveRequest;
+import com.project.vetProject.dto.request.animal.AnimalUpdateRequest;
 import com.project.vetProject.dto.response.animal.AnimalResponse;
 import com.project.vetProject.entity.Animal;
 import com.project.vetProject.entity.Customer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,17 +25,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AnimalManager implements IAnimalService {
-
+    private final ConvertEntityToResponse<Animal, AnimalResponse> convert;
     private final AnimalRepo animalRepo;
     private final IModelMapperService modelMapperService;
     private final ICustomerService customerService;
-
-    public AnimalManager(AnimalRepo animalRepo, IModelMapperService modelMapperService, ICustomerService customerService) {
-        this.animalRepo = animalRepo;
-        this.modelMapperService = modelMapperService;
-        this.customerService = customerService;
-    }
 
     @Override
     public ResultData<AnimalResponse> save(AnimalSaveRequest animalSaveRequest) {
@@ -56,19 +55,25 @@ public class AnimalManager implements IAnimalService {
     }
 
     @Override
-    public Page<Animal> cursor(int page, int pageSize) {
+    public ResultData<CursorResponse<AnimalResponse>> cursor(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
-        return this.animalRepo.findAll(pageable);
+        Page<Animal> animalPage = this.animalRepo.findAll(pageable);
+        Page<AnimalResponse> animalResponsePage = animalPage.map(animal -> this.modelMapperService.forResponse().map(animal, AnimalResponse.class));
+        return ResultHelper.cursor(animalResponsePage);
     }
 
     @Override
-    public List<Animal> findByName(String name) {
-        return this.animalRepo.findByName(name);
+    public ResultData<List<AnimalResponse>> findByName(String name) {
+        List<Animal> animalList = this.animalRepo.findByName(name);
+        List<AnimalResponse> animalResponseList = this.convert.convertToResponseList(animalList, AnimalResponse.class);
+        return ResultHelper.success(animalResponseList);
     }
 
     @Override
-    public List<Animal> findByCustomerId(int id) {
-        return this.animalRepo.findByCustomerId(id);
+    public ResultData<List<AnimalResponse>> findByCustomerId(int id) {
+        List<Animal> animalList = this.animalRepo.findByCustomerId(id);
+        List<AnimalResponse> animalResponseList = this.convert.convertToResponseList(animalList, AnimalResponse.class);
+        return ResultHelper.success(animalResponseList);
     }
 
     @Override
@@ -77,9 +82,11 @@ public class AnimalManager implements IAnimalService {
     }
 
     @Override
-    public Animal update(Animal animal) {
-        this.get(animal.getId());
-        return this.animalRepo.save(animal);
+    public ResultData<AnimalResponse> update(AnimalUpdateRequest animalUpdateRequest) {
+        this.get(animalUpdateRequest.getId());
+        Animal updateAnimal = this.modelMapperService.forRequest().map(animalUpdateRequest, Animal.class);
+        this.animalRepo.save(updateAnimal);
+        return ResultHelper.success(this.modelMapperService.forResponse().map(updateAnimal, AnimalResponse.class));
     }
 
     @Override

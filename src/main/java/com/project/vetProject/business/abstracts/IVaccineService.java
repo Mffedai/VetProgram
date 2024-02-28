@@ -1,5 +1,10 @@
 package com.project.vetProject.business.abstracts;
 
+import com.project.vetProject.core.result.ResultData;
+import com.project.vetProject.dto.CursorResponse;
+import com.project.vetProject.dto.request.vaccine.VaccineSaveRequest;
+import com.project.vetProject.dto.request.vaccine.VaccineUpdateRequest;
+import com.project.vetProject.dto.response.vaccine.VaccineResponse;
 import com.project.vetProject.entity.Vaccine;
 import org.springframework.data.domain.Page;
 
@@ -7,12 +12,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface IVaccineService {
-    Vaccine save(Vaccine vaccine);
+    ResultData<VaccineResponse> save(VaccineSaveRequest vaccineSaveRequest);
     Vaccine get(int id);
-    Page<Vaccine> cursor(int page, int pageSize);
-    List<Vaccine> findByAnimalId(int id);
-    List<Vaccine> findByDate(LocalDate entryDate, LocalDate exitDate);
+    ResultData<CursorResponse<VaccineResponse>> cursor(int page, int pageSize);
+    ResultData<List<VaccineResponse>> findByAnimalId(int id);
+    ResultData<List<VaccineResponse>> findByDate(LocalDate entryDate, LocalDate exitDate);
     List<Vaccine> findByCodeAndName(String code, String name);
-    Vaccine update(Vaccine vaccine);
+    ResultData<VaccineResponse> update(VaccineUpdateRequest vaccineUpdateRequest);
     boolean delete(int id);
 }

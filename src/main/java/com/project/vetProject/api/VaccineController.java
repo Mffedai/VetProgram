@@ -13,6 +13,7 @@ import com.project.vetProject.dto.response.vaccine.VaccineResponse;
 import com.project.vetProject.entity.Animal;
 import com.project.vetProject.entity.Vaccine;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -24,48 +25,25 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/vaccines")
+@RequiredArgsConstructor
 public class VaccineController {
     private final IVaccineService vaccineService;
-    private final IModelMapperService modelMapperService;
-    private final IAnimalService animalService;
-
-    public VaccineController(IVaccineService vaccineService, IModelMapperService modelMapperService, IAnimalService animalService) {
-        this.vaccineService = vaccineService;
-        this.modelMapperService = modelMapperService;
-        this.animalService = animalService;
-    }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<VaccineResponse> save(@Valid @RequestBody VaccineSaveRequest vaccineSaveRequest){
-        List<Vaccine> existVaccines = vaccineService.findByCodeAndName(vaccineSaveRequest.getCode(), vaccineSaveRequest.getName());
-
-        if (!existVaccines.isEmpty() && existVaccines.get(0).getProtectionFnshDate().isAfter(LocalDate.now())){
-            return ResultHelper.error("Aynı koda sahip aşının bitiş tarihi bitmemiş! ");
-        }
-        Animal animal = this.animalService.get(vaccineSaveRequest.getAnimalId());
-        vaccineSaveRequest.setAnimalId(null);
-
-        Vaccine saveVaccine = this.modelMapperService.forRequest().map(vaccineSaveRequest, Vaccine.class);
-        saveVaccine.setAnimal(animal);
-        this.vaccineService.save(saveVaccine);
-        return ResultHelper.created(this.modelMapperService.forResponse().map(saveVaccine, VaccineResponse.class));
+        return this.vaccineService.save(vaccineSaveRequest);
     }
     @GetMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<CursorResponse<VaccineResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize) {
-        Page<Vaccine> vaccinePage = this.vaccineService.cursor(page, pageSize);
-        Page<VaccineResponse> vaccineResponsePage = vaccinePage.map(vaccine -> this.modelMapperService.forResponse().map(vaccine, VaccineResponse.class));
-        return ResultHelper.cursor(vaccineResponsePage);
+        return this.vaccineService.cursor(page, pageSize);
     }
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<VaccineResponse> update(@Valid @RequestBody VaccineUpdateRequest vaccineUpdateRequest){
-        this.vaccineService.get(vaccineUpdateRequest.getId());
-        Vaccine updateVaccine = this.modelMapperService.forRequest().map(vaccineUpdateRequest, Vaccine.class);
-        this.vaccineService.update(updateVaccine);
-        return ResultHelper.success(this.modelMapperService.forResponse().map(updateVaccine, VaccineResponse.class));
+        return this.vaccineService.update(vaccineUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -75,12 +53,11 @@ public class VaccineController {
     }
     @GetMapping("/animal/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResultData<List<Vaccine>> getVaccineByAnimalId(@PathVariable("id") int animalId){
-        List<Vaccine> vaccineList = this.vaccineService.findByAnimalId(animalId);
-        return ResultHelper.success(vaccineList);
+    public ResultData<List<VaccineResponse>> getVaccineByAnimalId(@PathVariable("id") int animalId){
+        return this.vaccineService.findByAnimalId(animalId);
     }
     @GetMapping("/findByDate")
-    public List<Vaccine> getVaccinesByDate(
+    public ResultData<List<VaccineResponse>> getVaccinesByDate(
             @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate entryDate,
             @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate exitDate
             ){

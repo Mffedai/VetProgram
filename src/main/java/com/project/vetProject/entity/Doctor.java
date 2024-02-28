@@ -30,7 +30,7 @@ public class Doctor {
     @Column(name = "doctor_city")
     private String city;
 
-    @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "doctor", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JsonIgnore
     private List<Appointment> appointments;
 

@@ -1,6 +1,7 @@
 package com.project.vetProject.business.concretes;
 
 import com.project.vetProject.business.abstracts.ICustomerService;
+import com.project.vetProject.core.config.ConvertEntityToResponse;
 import com.project.vetProject.core.config.modelMapper.IModelMapperService;
 import com.project.vetProject.core.exception.DataAlreadyExistException;
 import com.project.vetProject.core.exception.NotFoundException;
@@ -8,8 +9,12 @@ import com.project.vetProject.core.result.ResultData;
 import com.project.vetProject.core.utilies.Msg;
 import com.project.vetProject.core.utilies.ResultHelper;
 import com.project.vetProject.dao.CustomerRepo;
+import com.project.vetProject.dto.CursorResponse;
+import com.project.vetProject.dto.request.customer.CustomerSaveRequest;
+import com.project.vetProject.dto.request.customer.CustomerUpdateRequest;
 import com.project.vetProject.dto.response.customer.CustomerResponse;
 import com.project.vetProject.entity.Customer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -20,22 +25,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CustomerManager implements ICustomerService {
     private final CustomerRepo customerRepo;
     private final IModelMapperService modelMapperService;
+    private final ConvertEntityToResponse<Customer, CustomerResponse> convert;
 
-    @Autowired
-    public CustomerManager(CustomerRepo customerRepo, IModelMapperService modelMapperService) {
-        this.customerRepo = customerRepo;
-        this.modelMapperService = modelMapperService;
-    }
     @Override
-    public ResultData<CustomerResponse> save(Customer customer) {
-        List<Customer> getByNamePhoneMail = this.findByNameAndMailAndPhone(customer.getName(), customer.getMail(), customer.getPhone());
+    public ResultData<CustomerResponse> save(CustomerSaveRequest customerSaveRequest) {
+        Customer saveCustomer = this.modelMapperService.forRequest().map(customerSaveRequest, Customer.class);
+        List<Customer> getByNamePhoneMail = this.findByNameAndMailAndPhone(
+                saveCustomer.getName(),
+                saveCustomer.getMail(),
+                saveCustomer.getPhone());
         if (!getByNamePhoneMail.isEmpty()){
             throw new DataAlreadyExistException(Msg.getEntityForMsg(Customer.class));
         }
-        return ResultHelper.created(this.modelMapperService.forResponse().map(this.customerRepo.save(customer), CustomerResponse.class));
+        return ResultHelper.created(this.modelMapperService.forResponse().map(this.customerRepo.save(saveCustomer), CustomerResponse.class));
     }
 
     @Override
@@ -44,25 +50,25 @@ public class CustomerManager implements ICustomerService {
     }
 
     @Override
-    public Page<Customer> cursor(int page, int pageSize) {
+    public ResultData<CursorResponse<CustomerResponse>> cursor(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
-        return this.customerRepo.findAll(pageable);
+        Page<Customer> customerPage = this.customerRepo.findAll(pageable);
+        Page<CustomerResponse> customerResponsePage = customerPage.map(customer -> this.modelMapperService.forResponse().map(customer, CustomerResponse.class));
+        return ResultHelper.cursor(customerResponsePage);
     }
 
     @Override
-    public Customer update(Customer customer) {
-        this.get(customer.getId());
-        return this.customerRepo.save(customer);
+    public ResultData<CustomerResponse> update(CustomerUpdateRequest customerUpdateRequest) {
+        this.get(customerUpdateRequest.getId());
+        Customer updateCustomer = this.modelMapperService.forRequest().map(customerUpdateRequest, Customer.class);
+        return ResultHelper.success(this.modelMapperService.forResponse().map(this.customerRepo.save(updateCustomer), CustomerResponse.class));
     }
 
     @Override
-    public ResultData<List<Customer>> findByName(String name) {
-
+    public ResultData<List<CustomerResponse>> findByName(String name) {
         List<Customer> customerList = this.customerRepo.findByName(name);
-        if (customerList.isEmpty()){
-            return ResultHelper.FoundByName();
-        }
-        return ResultHelper.success(customerList);
+        List<CustomerResponse> customerResponseList = this.convert.convertToResponseList(customerList, CustomerResponse.class);
+        return ResultHelper.success(customerResponseList);
     }
 
     @Override

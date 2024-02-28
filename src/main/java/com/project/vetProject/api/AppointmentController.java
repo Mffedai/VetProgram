@@ -15,6 +15,7 @@ import com.project.vetProject.entity.Animal;
 import com.project.vetProject.entity.Appointment;
 import com.project.vetProject.entity.Doctor;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -27,16 +28,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/appointments")
+@RequiredArgsConstructor
 public class AppointmentController {
     private final IAppointmentService appointmentService;
-    private final IModelMapperService modelMapperService;
 
-
-    public AppointmentController(IAppointmentService appointmentService, IModelMapperService modelMapperService) {
-        this.appointmentService = appointmentService;
-        this.modelMapperService = modelMapperService;
-
-    }
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
     public ResultData<AppointmentResponse> save(@Valid @RequestBody AppointmentSaveRequest appointmentSaveRequest){
@@ -47,17 +42,12 @@ public class AppointmentController {
     public ResultData<CursorResponse<AppointmentResponse>> cursor(
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize){
-        Page<Appointment> appointmentPage = this.appointmentService.cursor(page, pageSize);
-        Page<AppointmentResponse> appointmentResponsePage = appointmentPage.map(appointment -> this.modelMapperService.forResponse().map(appointment, AppointmentResponse.class));
-        return ResultHelper.cursor(appointmentResponsePage);
+        return this.appointmentService.cursor(page, pageSize);
     }
     @PutMapping()
     @ResponseStatus(HttpStatus.OK)
     public ResultData<AppointmentResponse> update(@Valid @RequestBody AppointmentUpdateRequest appointmentUpdateRequest){
-        this.appointmentService.get(appointmentUpdateRequest.getId());
-        Appointment updateAppointment = this.modelMapperService.forRequest().map(appointmentUpdateRequest, Appointment.class);
-        this.appointmentService.update(updateAppointment);
-        return ResultHelper.success(this.modelMapperService.forResponse().map(updateAppointment, AppointmentResponse.class));
+        return this.appointmentService.update(appointmentUpdateRequest);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -66,25 +56,21 @@ public class AppointmentController {
         return ResultHelper.ok();
     }
     @GetMapping("/filterByDrDate/{doctorId}-{findByDate}")
-    public List<Appointment> getDoctorIdAndDate(
+    public ResultData<List<AppointmentResponse>> getDoctorIdAndDate(
             @PathVariable("doctorId") int id,
             @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate entryDate,
             @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate exitDate
     ){
-        LocalDateTime convertedEntryDate = entryDate.atStartOfDay();
-        LocalDateTime convertedExitDate = exitDate.atStartOfDay().plusDays(1);
-        return this.appointmentService.findByDoctorIdAndDateTimeBetween(id,convertedEntryDate,convertedExitDate);
+        return this.appointmentService.findByDoctorIdAndDateTimeBetween(id,entryDate,exitDate);
     }
 
     @GetMapping("/filterByAnmlDate/{animalId}-{findByDate}")
-    public List<Appointment> getAnimalIdAndDate(
+    public ResultData<List<AppointmentResponse>> getAnimalIdAndDate(
             @PathVariable("animalId") int id,
             @RequestParam(name = "entryDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate entryDate,
             @RequestParam(name = "exitDate") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate exitDate
     ){
-        LocalDateTime convertedEntryDate = entryDate.atStartOfDay();
-        LocalDateTime convertedExitDate = exitDate.atStartOfDay().plusDays(1);
-        return this.appointmentService.findByAnimalIdAndDateTimeBetween(id, convertedEntryDate, convertedExitDate);
+        return this.appointmentService.findByAnimalIdAndDateTimeBetween(id, entryDate, exitDate);
     }
 
 }
